@@ -25,7 +25,7 @@ MANZIL is a web-based platform for buying, selling, and renting properties. User
 
 ## Installation
 1. **Clone the repository**
-git clone https://github.com/yourusername/manzil.git
+git clone https://github.com/sameer7075/manzil.git
 cd manzil
 
 2. **Create a virtual environment**

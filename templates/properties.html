@@ -43,6 +43,7 @@
                     <div class="user-card">
                         <p><strong>{{ current_user.username }}</strong></p>
                         <p>{{ current_user.email }}</p>
+                        <a href="{{ url_for('dashboard') }}" class="dashboard-link">My Listings</a>
                         <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
                     </div>
                 </div>
@@ -209,7 +210,7 @@
                 <p class="results-count">{{ properties|length }} Results Found</p>
                 {%endif%}
                 {% for property in properties %}
-                <div class="property-card">
+                <div class="property-card" >
                     <div class="property-image">
                         {% set image_list = property.images.split(',') if property.images else [] %}
                         <img src="{{ url_for('static', filename='uploads/' + image_list[0]) }}"
@@ -223,9 +224,9 @@
                             <p><strong> PKR {{ "{:,.0f}".format(property.price) }}</strong></p>
                         </div>
 
-                        <div class="property-title">
+                        <a href="/property/{{ property.id }}" class="property-title">
                             <h2>{{ property.title }}</h2>
-                        </div>
+                        </a>
 
 
                         <p class="location">

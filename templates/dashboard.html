@@ -1,17 +1,171 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+    <title>My Listings - MANZIL</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/results.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 </head>
+
 <body>
-<div class="auth-container">
-    <h2>Welcome, {{ username }}!</h2>
-    <p>You are logged in.</p>
-    <form action="{{ url_for('logout') }}" method="GET">
-        <button type="submit">Logout</button>
-    </form>
-</div>
+
+    <header class="navbar">
+        <a href="{{ url_for('index') }}" class="logo">
+            <div class="Heading">
+                <span class="red">MAN</span><span>ZIL</span>
+            </div>
+        </a>
+
+        <div class="nav-buttons">
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('view_properties', purpose='For Sale') }}" class="btn">Buy</a></li>
+                    {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('add_property') }}">Sell</a></li>
+                    {% endif %}
+                    <li><a href="{{ url_for('view_properties', purpose='For Rent') }}" class="btn">Rent</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <div class="auth-buttons">
+            {% if current_user.is_authenticated %}
+            <div class="user-actions">
+                <div class="icon-wrapper">
+                    <img src="{{ url_for('static', filename='images/inbox.png') }}" alt="Inbox" class="icon">
+                </div>
+                <div class="icon-wrapper">
+                    <img src="{{ url_for('static', filename='images/favourites.png') }}" alt="Favorites" class="icon">
+                </div>
+                <div class="icon-wrapper user-icon">
+                    <img src="{{ url_for('static', filename='images/user.png') }}" alt="User" class="icon">
+                    <div class="user-card">
+                        <p><strong>{{ current_user.username }}</strong></p>
+                        <p>{{ current_user.email }}</p>
+                        <a href="{{ url_for('dashboard') }}" class="dashboard-link">My Listings</a>
+                        <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <a href="{{ url_for('login') }}" class="login">Log In</a>
+            <a href="{{ url_for('register') }}" class="signup">Sign Up</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <h1>My Listings</h1>
+        <p>Welcome, <strong>{{ username }}</strong>! Manage your property listings here.</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-body">
+        {% if properties %}
+        <div class="content">
+            <section class="property-list">
+                <p class="results-count">
+                    {% if properties|length == 1 %}
+                    {{ properties|length }} Listing
+                    {% else %}
+                    {{ properties|length }} Listings
+                    {% endif %}
+                </p>
+
+                {% for property in properties %}
+                <div class="property-card">
+                    <div class="property-image">
+                        {% set image_list = property.images.split(',') if property.images else [] %}
+                        <img src="{{ url_for('static', filename='uploads/' + image_list[0]) }}"
+                            alt="{{ property.title }}">
+                    </div>
+
+                    <div class="property-details">
+                        <div class="property-header">
+                            <span class="status">{{ property.purpose }}</span>
+                            <p><strong>PKR {{ "{:,.0f}".format(property.price) }}</strong></p>
+                        </div>
+
+                        <div class="property-title">
+                            <h2>{{ property.title }}</h2>
+                        </div>
+
+                        <p class="location">
+                            <i class="fa fa-map-marker-alt"></i> {{ property.area_name }}, {{ property.city }}
+                        </p>
+
+                        <div class="property-icons">
+                            <span><img src="{{ url_for('static', filename='images/bed.png') }}" alt="Bedrooms"
+                                    class="icon-img"> {{ property.bedrooms }}</span>
+                            <span><img src="{{ url_for('static', filename='images/bath.png') }}" alt="Bathrooms"
+                                    class="icon-img"> {{ property.bathrooms }}</span>
+                            <span><img src="{{ url_for('static', filename='images/ruler.png') }}" alt="Area"
+                                    class="icon-img"> {{ "{:,.0f}".format(property.area) }} {{ property.unit }}</span>
+                        </div>
+
+                        <p class="type">{{ property.type | upper }}</p>
+
+                        <div class="property-footer">
+                            <a href="/property/{{ property.id }}" class="details-btn">View</a>
+                            <div class="action-buttons">
+                                <a href="{{ url_for('edit_property', property_id=property.id) }}" class="edit-btn">Edit</a>
+                                <form method="POST" action="{{ url_for('delete_property', property_id=property.id) }}" style="display: inline;">
+                                    <button type="submit" class="delete-btn" onclick="return confirm('Are you sure you want to delete this property?');">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </section>
+        </div>
+
+        {% else %}
+        <div class="no-listings">
+            <h2>No Listings Yet</h2>
+            <p>You haven't added any property listings yet. Start selling or renting your property today!</p>
+            <a href="{{ url_for('add_property') }}" class="add-listing-btn">Add New Listing</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-left">
+                <h2 class="footer-logo"><span class="red">MAN</span>ZIL</h2>
+                <p>Your trusted partner in buying, selling, and renting properties — built with care by Team AEGIS.</p>
+            </div>
+
+            <div class="footer-links">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="{{ url_for('view_properties', purpose='For Sale') }}" class="btn">Buy</a></li>
+                    {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('add_property') }}">Sell</a></li>
+                    {% endif %}
+                    <li><a href="{{ url_for('view_properties', purpose='For Rent') }}" class="btn">Rent</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-contact">
+                <h4>Contact Us</h4>
+                <p>Email: support@manzil.com</p>
+                <p>Phone: +92 300 1234567</p>
+                <p>Location: Islamabad, Pakistan</p>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>© 2025 MANZIL | Designed & Developed by <strong>Team AEGIS</strong></p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/dropdowns.js') }}"></script>
+
 </body>
+
 </html>

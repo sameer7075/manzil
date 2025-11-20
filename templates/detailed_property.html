@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ property.title }} - MANZIL</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/detailed_property.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/details.css') }}">
+
+    <style>
+        header.navbar {
+            background: linear-gradient(to right, #ffffff, #f9f9f9);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <header class="navbar">
+        <a href="{{ url_for('index') }}" class="logo">
+            <div class="Heading">
+                <span class="red">MAN</span><span>ZIL</span>
+            </div>
+        </a>
+
+        <div class="nav-buttons">
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('view_properties', purpose='For Sale') }}" class="btn">Buy</a></li>
+                    {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('add_property') }}">Sell</a></li>
+                    {% endif %}
+                    <li><a href="{{ url_for('view_properties', purpose='For Rent') }}" class="btn">Rent</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <div class="auth-buttons">
+            {% if current_user.is_authenticated %}
+            <div class="user-actions">
+                <div class="icon-wrapper">
+                    <img src="{{ url_for('static', filename='images/inbox.png') }}" alt="Inbox" class="icon">
+                </div>
+                <div class="icon-wrapper">
+                    <img src="{{ url_for('static', filename='images/favourites.png') }}" alt="Favorites" class="icon">
+                </div>
+                <div class="icon-wrapper user-icon">
+                    <img src="{{ url_for('static', filename='images/user.png') }}" alt="User" class="icon">
+                    <div class="user-card">
+                        <p><strong>{{ current_user.username }}</strong></p>
+                        <p>{{ current_user.email }}</p>
+                        <a href="{{ url_for('dashboard') }}" class="dashboard-link">My Listings</a>
+                        <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <a href="{{ url_for('login') }}" class="login">Log In</a>
+            <a href="{{ url_for('register') }}" class="signup">Sign Up</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <div class="details-container">
+
+        <!-- LEFT COLUMN – IMAGES -->
+        <div class="image-gallery">
+            {% set imgs = property.images.split(',') if property.images else [] %}
+            <img id="mainImage" class="main-image" src="{{ url_for('static', filename='uploads/' + imgs[0]) }}" alt="Property Image">
+
+            <div class="thumbnail-row">
+                {% for img in imgs %}
+                <img class="thumb" src="{{ url_for('static', filename='uploads/' + img) }}" alt="Thumbnail" onclick="changeMainImage(this)">
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN – DETAILS -->
+        <div class="property-info">
+
+            <div class="title-price">
+                <h1 class="details-title">{{ property.title }}</h1>
+                <h2 class="details-price">PKR {{ "{:,.0f}".format(property.price) }}</h2>
+            </div>
+
+            <p class="details-location">
+                {{ property.area_name }}, {{ property.city }}
+            </p>
+
+            <!-- Quick Property Stats -->
+            <div class="quick-icons">
+                <span><img src="{{ url_for('static', filename='images/bed.png') }}" class="icon-img"> {{ property.bedrooms }} bed</span>
+                <span><img src="{{ url_for('static', filename='images/bath.png') }}" class="icon-img"> {{ property.bathrooms }} bath</span>
+                <span><img src="{{ url_for('static', filename='images/ruler.png') }}" class="icon-img"> {{ property.area }} {{ property.unit }}</span>
+            </div>
+
+            <hr>
+
+            <!-- Summary Section -->
+            <h3>Summary</h3>
+            <p class="details-summary">
+                {{ property.description }}
+            </p>
+
+            <!-- Additional Info Boxes -->
+            <div class="info-grid">
+                <div class="info-box"><strong>Type:</strong> {{ property.type }}</div>
+                <div class="info-box"><strong>Status:</strong> {{ property.purpose }}</div>
+                <div class="info-box"><strong>Furnished:</strong> {{ property.furnished_status }}</div>
+                <div class="info-box"><strong>City:</strong> {{ property.city }}</div>
+            </div>
+
+            <hr>
+
+            <!-- Amenities Section -->
+            {% if property.amenities %}
+            <div class="amenities-section">
+                <h3>Amenities</h3>
+                <div class="amenities-list">
+                    {% set amenity_list = property.amenities.split(', ') %}
+                    {% for amenity in amenity_list %}
+                    <div class="amenity-item">
+                        <span class="amenity-check">✓</span>
+                        <span class="amenity-text">{{ amenity }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <hr>
+            {% endif %}
+
+            <!-- Seller Details Section -->
+            <div class="seller-section">
+                <h3>Seller Details</h3>
+                
+                <div class="seller-card">
+                    <div class="seller-info">
+                        <h4 class="seller-name">{{ property.seller_name }}</h4>
+                        <p class="seller-email">
+                            <img src="{{ url_for('static', filename='images/email.png') }}" alt="Email" class="seller-icon">
+                            {{ property.email }}
+                        </p>
+                        <p class="seller-phone">
+                            <img src="{{ url_for('static', filename='images/phone.png') }}" alt="Phone" class="seller-icon">
+                            {{ property.contact_number }}
+                        </p>
+                    </div>
+
+                    <div class="seller-actions">
+                        <a href="mailto:{{ property.email }}" class="btn-email">Email Seller</a>
+                        <a href="javascript:void(0);" class="btn-chat">Chat with Seller</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-left">
+                <h2 class="footer-logo"><span class="red">MAN</span>ZIL</h2>
+                <p>Your trusted partner in buying, selling, and renting properties — built with care by Team AEGIS.</p>
+            </div>
+
+            <div class="footer-links">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="{{ url_for('view_properties', purpose='For Sale') }}" class="btn">Buy</a></li>
+                    {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('add_property') }}">Sell</a></li>
+                    {% endif %}
+                    <li><a href="{{ url_for('view_properties', purpose='For Rent') }}" class="btn">Rent</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-contact">
+                <h4>Contact Us</h4>
+                <p>Email: support@manzil.com</p>
+                <p>Phone: +92 300 1234567</p>
+                <p>Location: Islamabad, Pakistan</p>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>© 2025 MANZIL | Designed & Developed by <strong>Team AEGIS</strong></p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/dropdowns.js') }}"></script>
+    
+    <script>
+        function changeMainImage(thumbnail) {
+            const mainImage = document.getElementById('mainImage');
+            mainImage.src = thumbnail.src;
+        }
+    </script>
+
+</body>
+</html>

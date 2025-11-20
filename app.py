@@ -118,13 +118,6 @@ def login():
 
     return render_template('login.html')
 
-
-@app.route('/dashboard')
-@login_required
-def dashboard():
-    return render_template('dashboard.html', username=current_user.username)
-
-
 @app.route('/logout')
 @login_required
 def logout():
@@ -167,6 +160,7 @@ def add_property():
         email = request.form.get('email')
  
         image_files = request.files.getlist('images')
+        thumbnail_index = int(request.form.get('thumbnail_index', 0))
         saved_filenames = []
 
         if image_files:
@@ -176,6 +170,11 @@ def add_property():
                     path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                     image.save(path)
                     saved_filenames.append(filename)
+
+        # Reorder images so thumbnail is first
+        if saved_filenames and thumbnail_index < len(saved_filenames):
+            thumbnail = saved_filenames.pop(thumbnail_index)
+            saved_filenames.insert(0, thumbnail)
 
         images_str = ','.join(saved_filenames) if saved_filenames else None
 
@@ -210,7 +209,6 @@ def add_property():
         return redirect(url_for('view_properties'))
 
     return render_template('add_property.html')
-
 
 
 @app.route('/properties')
@@ -271,6 +269,72 @@ def view_properties():
         filter_type=filter_type,
         search=search
     )
+
+@app.route('/property/<int:property_id>')
+def property_detail(property_id):
+    property = Property.query.get_or_404(property_id)
+    return render_template('detailed_property.html', property=property)
+
+# ...existing code...
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    user_properties = Property.query.filter_by(user_id=current_user.id).all()
+    return render_template('dashboard.html', properties=user_properties, username=current_user.username)
+
+@app.route('/delete_property/<int:property_id>', methods=['POST'])
+@login_required
+def delete_property(property_id):
+    property = Property.query.get_or_404(property_id)
+    
+    if property.user_id != current_user.id:
+        flash('You do not have permission to delete this property.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    db.session.delete(property)
+    db.session.commit()
+    flash('Property deleted successfully!', 'success')
+    return redirect(url_for('dashboard'))
+
+@app.route('/edit_property/<int:property_id>', methods=['GET', 'POST'])
+@login_required
+def edit_property(property_id):
+    property = Property.query.get_or_404(property_id)
+    
+    if property.user_id != current_user.id:
+        flash('You do not have permission to edit this property.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    if request.method == 'POST':
+        property.title = request.form.get('title')
+        property.type = request.form.get('type')
+        property.purpose = request.form.get('purpose')
+        property.price = float(request.form.get('price', 0))
+        property.area = float(request.form.get('area', 0))
+        property.unit = request.form.get('unit')
+        property.bedrooms = int(request.form.get('bedrooms', 0))
+        property.bathrooms = int(request.form.get('bathrooms', 0))
+        property.floor = request.form.get('floor') or None
+        property.furnished_status = request.form.get('furnished_status')
+        property.city = request.form.get('city')
+        property.area_name = request.form.get('area_name')
+        property.address = request.form.get('address')
+        property.landmarks = request.form.get('landmarks')
+        property.description = request.form.get('short_description')
+        
+        amenities = request.form.getlist('amenities')
+        property.amenities = ', '.join(amenities) if amenities else None
+        
+        property.seller_name = request.form.get('seller_name')
+        property.contact_number = request.form.get('contact_number')
+        property.email = request.form.get('email')
+        
+        db.session.commit()
+        flash('Property updated successfully!', 'success')
+        return redirect(url_for('dashboard'))
+    
+    return render_template('edit_property.html', property=property)
 
 
 if __name__ == '__main__':

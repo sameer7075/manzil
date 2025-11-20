@@ -192,7 +192,7 @@ nav a {
   position: absolute;
   top: calc(100% + 15px);
   right: 0;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 1);
   color: #333;
   padding: 12px;
   border-radius: 10px;
@@ -227,6 +227,25 @@ nav a {
   background: #d32f2f;
 }
 
+.dashboard-link{
+  display: block;
+  margin-top: 10px;
+  padding: 6px 12px;
+  background: #4CAF50;
+  color: #fff;
+  border-radius: 5px;
+  text-decoration: none;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+  translate: calc(-8%);
+}
+
+.dashboard-link:hover {
+    background-color: #45a049;
+}
 
 
 .hero {

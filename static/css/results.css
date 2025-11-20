@@ -382,6 +382,7 @@ header.navbar {
     padding: 20px;
     border-radius: 5px;
     background-color: white;
+    height: 855px;
 }
 
 .sidebar h3 {
@@ -490,6 +491,7 @@ header.navbar {
     width: 100%;
     height: 240px;
     padding: 0;
+    margin-bottom: 20px;
 }
 
 .property-image {
@@ -562,6 +564,11 @@ header.navbar {
 
 .property-title {
     margin: 10px 0;
+    text-decoration: none;
+}
+
+.property-title:hover{
+    color: #000000;
 }
 
 .property-title h2 {
@@ -629,3 +636,4 @@ header.navbar {
 .details-btn:hover {
     background-color: #d32f2f;
 }
+
