@@ -6,6 +6,8 @@
     <title>Add Property - MANZIL</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='./../static/css/properties.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 
 <body>
@@ -62,6 +64,8 @@
     <div class="form-container">
         <h1>Add a New Property</h1>
         <form method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="latitude" id="latitude">
+            <input type="hidden" name="longitude" id="longitude">
 
 
             <input type="text" name="title" placeholder="Property Title" required>
@@ -146,6 +150,9 @@
             <input type="text" name="address" placeholder="Street Address" required>
             <input type="text" name="landmarks" placeholder="Nearby Landmarks (optional)">
 
+            <label>Select Location on Map</label>
+            <div id="map" style="height: 400px; margin-bottom: 20px; border-radius: 8px;"></div>
+
 
             <label for="images">Upload Property Images:</label>
             <input type="file" name="images" id="images" accept="image/*" multiple required>
@@ -176,6 +183,8 @@
             <input type="text" name="seller_name" placeholder="Seller Name" required>
             <input type="tel" name="contact_number" placeholder="Contact Number" required>
             <input type="email" name="email" placeholder="Email" required>
+
+           
 
 
             <button type="submit">Add Property</button>
@@ -245,6 +254,35 @@
             });
         });
     </script>
+
+    <script>
+        const defaultLat = 33.6844; 
+        const defaultLng = 73.0479;  
+
+        const map = L.map('map').setView([defaultLat, defaultLng], 13);
+
+        L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}.png?api_key=YOUR_KEY', {
+            attribution: '&copy; Stadia Maps & OSM'
+        }).addTo(map);
+
+        let marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
+
+        marker.on('dragend', function(e) {
+            const latLng = e.target.getLatLng();
+            document.getElementById('latitude').value = latLng.lat;
+            document.getElementById('longitude').value = latLng.lng;
+        });
+
+        document.getElementById('latitude').value = defaultLat;
+        document.getElementById('longitude').value = defaultLng;
+
+        map.on('click', function(e) {
+            marker.setLatLng(e.latlng);
+            document.getElementById('latitude').value = e.latlng.lat;
+            document.getElementById('longitude').value = e.latlng.lng;
+        });
+    </script>
+
 </body>
 
 </html>

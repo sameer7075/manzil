@@ -5,7 +5,8 @@
     <title>{{ property.title }} - MANZIL</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/detailed_property.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/details.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
         header.navbar {
@@ -76,7 +77,13 @@
                 <img class="thumb" src="{{ url_for('static', filename='uploads/' + img) }}" alt="Thumbnail" onclick="changeMainImage(this)">
                 {% endfor %}
             </div>
+
+            {% if property.latitude and property.longitude %}
+            <div id="property-map" style="height: 400px; margin-top: 20px; border-radius: 8px;"></div>
+            {% endif %}
         </div>
+
+
 
         <!-- RIGHT COLUMN – DETAILS -->
         <div class="property-info">
@@ -201,6 +208,31 @@
             mainImage.src = thumbnail.src;
         }
     </script>
+
+    <script>
+    (function() {
+        const lat = parseFloat("{{ property.latitude }}");
+        const lng = parseFloat("{{ property.longitude }}");
+
+        if (!lat || !lng) {
+            console.error("Invalid coordinates:", lat, lng);
+            return;
+        }
+
+        const map = L.map('property-map').setView([lat, lng], 15);
+
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        L.marker([lat, lng]).addTo(map)
+            .bindPopup("Property Location");
+    })();
+    </script>
+
+
+
+
 
 </body>
 </html>

@@ -5,6 +5,7 @@ from passlib.hash import pbkdf2_sha256
 import os
 from werkzeug.utils import secure_filename
 from flask import jsonify
+from flask_migrate import Migrate
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'my_very_secret_key_12345'
@@ -15,6 +16,7 @@ app.config['UPLOAD_FOLDER'] = 'static/uploads'
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+migrate = Migrate(app, db)
 
 favorites = db.Table('favorites',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
@@ -48,6 +50,9 @@ class Property(db.Model):
     area_name = db.Column(db.String(100), nullable=False)
     address = db.Column(db.String(200), nullable=False)
     landmarks = db.Column(db.String(200), nullable=True)
+
+    latitude = db.Column(db.Float, nullable=True)
+    longitude = db.Column(db.Float, nullable=True)
     
     description = db.Column(db.Text, nullable=False)
     
@@ -55,7 +60,6 @@ class Property(db.Model):
 
     
     amenities = db.Column(db.String(300), nullable=True)
-
     
     seller_name = db.Column(db.String(100), nullable=False)
     contact_number = db.Column(db.String(50), nullable=False)
@@ -169,6 +173,10 @@ def add_property():
  
         image_files = request.files.getlist('images')
         thumbnail_index = int(request.form.get('thumbnail_index', 0))
+
+        latitude = request.form.get("latitude")
+        longitude = request.form.get("longitude")
+
         saved_filenames = []
 
         if image_files:
@@ -185,6 +193,8 @@ def add_property():
             saved_filenames.insert(0, thumbnail)
 
         images_str = ','.join(saved_filenames) if saved_filenames else None
+
+       
 
         new_property = Property(
             title=title,
@@ -207,7 +217,9 @@ def add_property():
             seller_name=seller_name,
             contact_number=contact_number,
             email=email,
-            user_id=current_user.id
+            user_id=current_user.id,
+            latitude=latitude,
+            longitude=longitude
         )
 
         db.session.add(new_property)
