@@ -36,7 +36,9 @@
                     <img src="{{ url_for('static', filename='images/inbox.png') }}" alt="Inbox" class="icon">
                 </div>
                 <div class="icon-wrapper">
-                    <img src="{{ url_for('static', filename='images/favourites.png') }}" alt="Favorites" class="icon">
+                    <a href="{{ url_for('favorites_page') }}">
+                        <img src="{{ url_for('static', filename='images/favourites.png') }}" alt="Favorites" class="icon">
+                    </a>
                 </div>
                 <div class="icon-wrapper user-icon">
                     <img src="{{ url_for('static', filename='images/user.png') }}" alt="User" class="icon">
@@ -211,6 +213,16 @@
                 {%endif%}
                 {% for property in properties %}
                 <div class="property-card" >
+                    {% if current_user.is_authenticated %}
+                    <div class="favorite-icon" data-id="{{ property.id }}">
+                        {% if property in current_user.favorite_properties %}
+                        <img src="{{ url_for('static', filename='images/favorite-filled.png') }}" alt="Favorite">
+                        {% else %}
+                        <img src="{{ url_for('static', filename='images/favorite-empty.png') }}" alt="Favorite">
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
                     <div class="property-image">
                         {% set image_list = property.images.split(',') if property.images else [] %}
                         <img src="{{ url_for('static', filename='uploads/' + image_list[0]) }}"
@@ -292,6 +304,24 @@
 
 
     <script src="{{ url_for('static', filename='js/dropdowns.js') }}"></script>
+    <script>
+        document.querySelectorAll('.favorite-icon').forEach(icon => {
+            icon.addEventListener('click', () => {
+                const propertyId = icon.dataset.id;
+                fetch(`/favorite/${propertyId}`, { method: 'POST' })
+                    .then(res => res.json())
+                    .then(data => {
+                        const img = icon.querySelector('img');
+                        if(data.status === 'added') {
+                            img.src = "{{ url_for('static', filename='images/favorite-filled.png') }}";
+                        } else {
+                            img.src = "{{ url_for('static', filename='images/favorite-empty.png') }}";
+                        }
+                    });
+            });
+        });
+    </script>
+
 </body>
 
 </html>

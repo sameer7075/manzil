@@ -4,6 +4,7 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from passlib.hash import pbkdf2_sha256
 import os
 from werkzeug.utils import secure_filename
+from flask import jsonify
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'my_very_secret_key_12345'
@@ -15,12 +16,19 @@ db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
+favorites = db.Table('favorites',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('property_id', db.Integer, db.ForeignKey('property.id'), primary_key=True)
+)
+
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)  
+
+    favorite_properties = db.relationship('Property', secondary=favorites, backref=db.backref('favorited_by', lazy='dynamic'))
 
 class Property(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -335,6 +343,25 @@ def edit_property(property_id):
         return redirect(url_for('dashboard'))
     
     return render_template('edit_property.html', property=property)
+
+@app.route('/favorite/<int:property_id>', methods=['POST'])
+@login_required
+def favorite_property(property_id):
+    property_obj = Property.query.get_or_404(property_id)
+    if property_obj in current_user.favorite_properties:
+        current_user.favorite_properties.remove(property_obj)
+        db.session.commit()
+        return jsonify({'status': 'removed'})
+    else:
+        current_user.favorite_properties.append(property_obj)
+        db.session.commit()
+        return jsonify({'status': 'added'})
+
+@app.route('/favorites')
+@login_required
+def favorites_page():
+    user_favorites = current_user.favorite_properties  
+    return render_template('favorites.html', properties=user_favorites)
 
 
 if __name__ == '__main__':

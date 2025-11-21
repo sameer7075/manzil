@@ -492,6 +492,27 @@ header.navbar {
     height: 240px;
     padding: 0;
     margin-bottom: 20px;
+    position: relative;
+}
+
+.favorite-icon {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: white;
+    width: 30px;  
+    height: 30px;   
+    border-radius: 50%; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.favorite-icon img {
+    width: 20px;
+    height: 20px;
 }
 
 .property-image {

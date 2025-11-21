@@ -35,7 +35,9 @@
                     <img src="{{ url_for('static', filename='images/inbox.png') }}" alt="Inbox" class="icon">
                 </div>
                 <div class="icon-wrapper">
-                    <img src="{{ url_for('static', filename='images/favourites.png') }}" alt="Favorites" class="icon">
+                  <a href="{{ url_for('favorites_page') }}">
+                        <img src="{{ url_for('static', filename='images/favourites.png') }}" alt="Favorites" class="icon">
+                    </a>
                 </div>
                 <div class="icon-wrapper user-icon">
                     <img src="{{ url_for('static', filename='images/user.png') }}" alt="User" class="icon">

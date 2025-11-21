@@ -35,6 +35,11 @@
 
 }
 
+a {
+  padding: 0px;
+  margin: 0px;
+}
+
 body {
   background: #fff;
   color: #333;
@@ -144,15 +149,15 @@ nav a {
 }
 
 
+.icon-wrapper a {
+    padding: 0;
+    margin: 0;/* remove underline */
+}
+
 .user-actions {
   display: flex;
   gap: 25px;
   align-items: center;
-}
-
-
-.icon-wrapper {
-  position: relative;
 }
 
 .icon {
@@ -160,7 +165,7 @@ nav a {
   height: 22px;
   cursor: pointer;
   transition: transform 0.2s ease;
-  stroke-width: 10px;
+  stroke-width: 100px;
   stroke: #333;
 }
 

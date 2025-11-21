@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>My Listings - MANZIL</title>
+    <title>My Favorites - MANZIL</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/results.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
@@ -58,10 +58,10 @@
         </div>
     </header>
 
-    <!-- Dashboard Header -->
+    <!-- Favorites Header -->
     <div class="dashboard-header">
-        <h1>My Listings</h1>
-        <p>Welcome, <strong>{{ username }}</strong>! Manage your property listings here.</p>
+        <h1>My Favorites</h1>
+        <p>Here are all the properties you have favorited.</p>
     </div>
 
     <!-- Main Content -->
@@ -71,9 +71,9 @@
             <section class="property-list">
                 <p class="results-count">
                     {% if properties|length == 1 %}
-                    {{ properties|length }} Listing
+                    {{ properties|length }} Favorite
                     {% else %}
-                    {{ properties|length }} Listings
+                    {{ properties|length }} Favorites
                     {% endif %}
                 </p>
 
@@ -83,6 +83,17 @@
                         {% set image_list = property.images.split(',') if property.images else [] %}
                         <img src="{{ url_for('static', filename='uploads/' + image_list[0]) }}"
                             alt="{{ property.title }}">
+
+                        <!-- Favorite Heart Overlay -->
+                        {% if current_user.is_authenticated %}
+                        <div class="favorite-icon" data-id="{{ property.id }}">
+                            {% if property in current_user.favorite_properties %}
+                            <img src="{{ url_for('static', filename='images/favorite-filled.png') }}" alt="Favorite">
+                            {% else %}
+                            <img src="{{ url_for('static', filename='images/favorite-empty.png') }}" alt="Favorite">
+                            {% endif %}
+                        </div>
+                        {% endif %}
                     </div>
 
                     <div class="property-details">
@@ -112,29 +123,22 @@
 
                         <div class="property-footer">
                             <a href="/property/{{ property.id }}" class="details-btn">View</a>
-                            <div class="action-buttons">
-                                <a href="{{ url_for('edit_property', property_id=property.id) }}" class="edit-btn">Edit</a>
-                                <form method="POST" action="{{ url_for('delete_property', property_id=property.id) }}" style="display: inline;">
-                                    <button type="submit" class="delete-btn" onclick="return confirm('Are you sure you want to delete this property?');">Delete</button>
-                                </form>
-                            </div>
                         </div>
                     </div>
                 </div>
                 {% endfor %}
             </section>
         </div>
-
         {% else %}
         <div class="no-listings">
-            <h2>No Listings Yet</h2>
-            <p>You haven't added any property listings yet. Start selling or renting your property today!</p>
-            <a href="{{ url_for('add_property') }}" class="add-listing-btn">Add New Listing</a>
+            <h2>No Favorites Yet</h2>
+            <p>You haven't favorited any properties yet. Browse properties and click the heart to add them here!</p>
+            <a href="{{ url_for('view_properties') }}" class="add-listing-btn">Browse Properties</a>
         </div>
         {% endif %}
     </div>
 
-    <!-- Footer -->
+    <!-- Footer (same as dashboard/properties) -->
     <footer class="footer">
         <div class="footer-container">
             <div class="footer-left">
@@ -167,6 +171,24 @@
     </footer>
 
     <script src="{{ url_for('static', filename='js/dropdowns.js') }}"></script>
+    <script>
+        // JS to toggle favorites
+        document.querySelectorAll('.favorite-icon').forEach(icon => {
+            icon.addEventListener('click', () => {
+                const propertyId = icon.dataset.id;
+                fetch(`/favorite/${propertyId}`, { method: 'POST' })
+                    .then(res => res.json())
+                    .then(data => {
+                        const img = icon.querySelector('img');
+                        if (data.status === 'added') {
+                            img.src = "{{ url_for('static', filename='images/favorite-filled.png') }}";
+                        } else {
+                            img.src = "{{ url_for('static', filename='images/favorite-empty.png') }}";
+                        }
+                    });
+            });
+        });
+    </script>
 
 </body>
 
