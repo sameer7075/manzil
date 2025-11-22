@@ -58,13 +58,13 @@
         </div>
     </header>
 
-    <!-- Favorites Header -->
+    
     <div class="dashboard-header">
         <h1>My Favorites</h1>
         <p>Here are all the properties you have favorited.</p>
     </div>
 
-    <!-- Main Content -->
+    
     <div class="main-body">
         {% if properties %}
         <div class="content">
@@ -79,7 +79,7 @@
 
                 {% for property in properties %}
                 <div class="property-card">
-                    <!-- Favorite Heart Overlay -->
+                    
                         {% if current_user.is_authenticated %}
                         <div class="favorite-icon" data-id="{{ property.id }}">
                             {% if property in current_user.favorite_properties %}
@@ -139,7 +139,7 @@
         {% endif %}
     </div>
 
-    <!-- Footer (same as dashboard/properties) -->
+    
     <footer class="footer">
         <div class="footer-container">
             <div class="footer-left">

@@ -37,7 +37,8 @@
                 </div>
                 <div class="icon-wrapper">
                     <a href="{{ url_for('favorites_page') }}">
-                        <img src="{{ url_for('static', filename='images/favourites.png') }}" alt="Favorites" class="icon">
+                        <img src="{{ url_for('static', filename='images/favourites.png') }}" alt="Favorites"
+                            class="icon">
                     </a>
                 </div>
                 <div class="icon-wrapper2 user-icon">
@@ -212,7 +213,7 @@
                 <p class="results-count">{{ properties|length }} Results Found</p>
                 {%endif%}
                 {% for property in properties %}
-                <div class="property-card" >
+                <div class="property-card">
                     {% if current_user.is_authenticated %}
                     <div class="favorite-icon" data-id="{{ property.id }}">
                         {% if property in current_user.favorite_properties %}
@@ -312,7 +313,7 @@
                     .then(res => res.json())
                     .then(data => {
                         const img = icon.querySelector('img');
-                        if(data.status === 'added') {
+                        if (data.status === 'added') {
                             img.src = "{{ url_for('static', filename='images/favorite-filled.png') }}";
                         } else {
                             img.src = "{{ url_for('static', filename='images/favorite-empty.png') }}";

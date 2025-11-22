@@ -40,7 +40,8 @@
 
                 <div class="icon-wrapper">
                     <a href="{{ url_for('favorites_page') }}">
-                        <img src="{{ url_for('static', filename='images/favourites.png') }}" alt="Favorites" class="icon">
+                        <img src="{{ url_for('static', filename='images/favourites.png') }}" alt="Favorites"
+                            class="icon">
                     </a>
                 </div>
 
@@ -156,7 +157,7 @@
 
             <label for="images">Upload Property Images:</label>
             <input type="file" name="images" id="images" accept="image/*" multiple required>
-            
+
             <label class="image-preview-label">Select Thumbnail Image:</label>
             <div class="image-preview-container" id="previewContainer">
             </div>
@@ -176,7 +177,8 @@
                 <label><input type="checkbox" name="amenities" value="Security"> Security</label>
                 <label><input type="checkbox" name="amenities" value="Balcony"> Balcony / Terrace</label>
                 <label><input type="checkbox" name="amenities" value="Lawn"> Lawn / Garden</label>
-                <label><input type="checkbox" name="amenities" value="Nearby Schools/Hospitals/Markets"> Nearby Schools / Hospitals / Markets</label>
+                <label><input type="checkbox" name="amenities" value="Nearby Schools/Hospitals/Markets"> Nearby Schools
+                    / Hospitals / Markets</label>
             </div>
 
 
@@ -184,7 +186,7 @@
             <input type="tel" name="contact_number" placeholder="Contact Number" required>
             <input type="email" name="email" placeholder="Email" required>
 
-           
+
 
 
             <button type="submit">Add Property</button>
@@ -231,18 +233,18 @@
         const previewContainer = document.getElementById('previewContainer');
         const thumbnailIndexInput = document.getElementById('thumbnailIndex');
 
-        imagesInput.addEventListener('change', function(e) {
+        imagesInput.addEventListener('change', function (e) {
             previewContainer.innerHTML = '';
             const files = Array.from(e.target.files);
 
             files.forEach((file, index) => {
                 const reader = new FileReader();
-                reader.onload = function(event) {
+                reader.onload = function (event) {
                     const box = document.createElement('div');
                     box.className = 'preview-box' + (index === 0 ? ' selected' : '');
                     box.innerHTML = `<img src="${event.target.result}" alt="Preview">`;
-                    
-                    box.addEventListener('click', function() {
+
+                    box.addEventListener('click', function () {
                         document.querySelectorAll('.preview-box').forEach(b => b.classList.remove('selected'));
                         box.classList.add('selected');
                         thumbnailIndexInput.value = index;
@@ -256,8 +258,8 @@
     </script>
 
     <script>
-        const defaultLat = 33.6844; 
-        const defaultLng = 73.0479;  
+        const defaultLat = 33.6844;
+        const defaultLng = 73.0479;
 
         const map = L.map('map').setView([defaultLat, defaultLng], 13);
 
@@ -267,7 +269,7 @@
 
         let marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
 
-        marker.on('dragend', function(e) {
+        marker.on('dragend', function (e) {
             const latLng = e.target.getLatLng();
             document.getElementById('latitude').value = latLng.lat;
             document.getElementById('longitude').value = latLng.lng;
@@ -276,7 +278,7 @@
         document.getElementById('latitude').value = defaultLat;
         document.getElementById('longitude').value = defaultLng;
 
-        map.on('click', function(e) {
+        map.on('click', function (e) {
             marker.setLatLng(e.latlng);
             document.getElementById('latitude').value = e.latlng.lat;
             document.getElementById('longitude').value = e.latlng.lng;
