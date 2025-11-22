@@ -64,10 +64,10 @@
         </div>
     </header>
 
-    <!-- MAIN CONTENT -->
+    
     <div class="details-container">
 
-        <!-- LEFT COLUMN – IMAGES -->
+        
         <div class="image-gallery">
             {% set imgs = property.images.split(',') if property.images else [] %}
             <img id="mainImage" class="main-image" src="{{ url_for('static', filename='uploads/' + imgs[0]) }}" alt="Property Image">
@@ -83,7 +83,7 @@
             {% endif %}
         </div>
 
-        <!-- RIGHT COLUMN – DETAILS -->
+        
         <div class="property-info">
 
             <div class="title-price">
@@ -95,7 +95,7 @@
                 {{ property.area_name }}, {{ property.city }}
             </p>
 
-            <!-- Quick Property Stats -->
+            
             <div class="quick-icons">
                 <span><img src="{{ url_for('static', filename='images/bed.png') }}" class="icon-img"> {{ property.bedrooms }} bed</span>
                 <span><img src="{{ url_for('static', filename='images/bath.png') }}" class="icon-img"> {{ property.bathrooms }} bath</span>
@@ -104,13 +104,13 @@
 
             <hr>
 
-            <!-- Summary Section -->
+            
             <h3>Summary</h3>
             <p class="details-summary">
                 {{ property.description }}
             </p>
 
-            <!-- Additional Info Boxes -->
+            
             <div class="info-grid">
                 <div class="info-box"><strong>Type:</strong> {{ property.type }}</div>
                 <div class="info-box"><strong>Status:</strong> {{ property.purpose }}</div>
@@ -120,7 +120,7 @@
 
             <hr>
 
-            <!-- Amenities Section -->
+            
             {% if property.amenities %}
             <div class="amenities-section">
                 <h3>Amenities</h3>
@@ -138,7 +138,7 @@
             <hr>
             {% endif %}
 
-            <!-- Seller Details Section -->
+            
             <div class="seller-section">
                 <h3>Seller Details</h3>
                 
@@ -166,7 +166,7 @@
 
     </div>
 
-    <!-- FOOTER -->
+    
     <footer class="footer">
         <div class="footer-container">
             <div class="footer-left">

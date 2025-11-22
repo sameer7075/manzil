@@ -263,8 +263,8 @@
 
         const map = L.map('map').setView([defaultLat, defaultLng], 13);
 
-        L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}.png?api_key=YOUR_KEY', {
-            attribution: '&copy; Stadia Maps & OSM'
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
         }).addTo(map);
 
         let marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
