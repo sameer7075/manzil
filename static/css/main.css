@@ -35,6 +35,11 @@
 
 }
 
+a {
+  padding: 0px;
+  margin: 0px;
+}
+
 body {
   background: #fff;
   color: #333;
@@ -144,15 +149,15 @@ nav a {
 }
 
 
+.icon-wrapper a {
+    padding: 0;
+    margin: 0;/* remove underline */
+}
+
 .user-actions {
   display: flex;
   gap: 25px;
   align-items: center;
-}
-
-
-.icon-wrapper {
-  position: relative;
 }
 
 .icon {
@@ -160,7 +165,7 @@ nav a {
   height: 22px;
   cursor: pointer;
   transition: transform 0.2s ease;
-  stroke-width: 10px;
+  stroke-width: 100px;
   stroke: #333;
 }
 
@@ -192,7 +197,7 @@ nav a {
   position: absolute;
   top: calc(100% + 15px);
   right: 0;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 1);
   color: #333;
   padding: 12px;
   border-radius: 10px;
@@ -227,6 +232,25 @@ nav a {
   background: #d32f2f;
 }
 
+.dashboard-link{
+  display: block;
+  margin-top: 10px;
+  padding: 6px 12px;
+  background: #4CAF50;
+  color: #fff;
+  border-radius: 5px;
+  text-decoration: none;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+  translate: calc(-8%);
+}
+
+.dashboard-link:hover {
+    background-color: #45a049;
+}
 
 
 .hero {
@@ -571,4 +595,24 @@ nav a {
 
 .footer-bottom strong {
   color: #fff;
+}
+
+.icon-wrapper {
+    position: relative;
+}
+
+#unread-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #E53935;
+    color: #fff;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
 }

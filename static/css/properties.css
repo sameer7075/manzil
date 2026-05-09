@@ -521,3 +521,66 @@ header.navbar {
     border-radius: 5px;
     text-decoration: none;
 }
+
+.image-preview-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+    padding: 15px;
+    background: #f8f8f8;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.preview-box {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.preview-box:hover {
+    border-color: #e53935;
+    box-shadow: 0 3px 8px rgba(229, 57, 53, 0.3);
+}
+
+.preview-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.preview-box.selected {
+    border: 3px solid #e53935;
+    box-shadow: 0 0 10px rgba(229, 57, 53, 0.5);
+}
+
+.preview-box.selected::after {
+    content: "★ Thumbnail";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(229, 57, 53, 0.9);
+    color: white;
+    font-size: 11px;
+    padding: 4px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.thumbnail-input {
+    display: none;
+}
+
+.image-preview-label {
+    display: block;
+    margin-top: 15px;
+    font-weight: 600;
+    color: #333;
+}

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Property - MANZIL</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='./../static/css/properties.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+
+<body>
+    <header class="navbar">
+        <a href="{{ url_for('index') }}" class="logo">
+            <div class="Heading">
+                <span class="red">MAN</span><span>ZIL</span>
+            </div>
+        </a>
+
+        <div class="nav-buttons">
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('view_properties', purpose='For Sale') }}" class="btn">Buy</a></li>
+                    {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('add_property') }}">Sell</a></li>
+                    {% endif %}
+                    <li><a href="{{ url_for('view_properties', purpose='For Rent') }}" class="btn">Rent</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <div class="auth-buttons">
+            {% if current_user.is_authenticated %}
+            <div class="user-actions">
+                <div class="icon-wrapper">
+                    <a href="{{ url_for('messages_list') }}">
+                        <img src="{{ url_for('static', filename='images/inbox.png') }}" alt="Inbox" class="icon">
+                    </a>
+                </div>
+                <div class="icon-wrapper">
+                  <a href="{{ url_for('favorites_page') }}">
+                        <img src="{{ url_for('static', filename='images/favourites.png') }}" alt="Favorites" class="icon">
+                    </a>
+                </div>
+                <div class="icon-wrapper2 user-icon">
+                    <img src="{{ url_for('static', filename='images/user.png') }}" alt="User" class="icon">
+                    <div class="user-card">
+                        <p><strong>{{ current_user.username }}</strong></p>
+                        <p>{{ current_user.email }}</p>
+                        <a href="{{ url_for('dashboard') }}" class="dashboard-link">My Listings</a>
+                        <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <a href="{{ url_for('login') }}" class="login">Log In</a>
+            <a href="{{ url_for('register') }}" class="signup">Sign Up</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <div class="form-container">
+        <h1>Edit Property</h1>
+        <form method="POST" enctype="multipart/form-data">
+
+            <input type="text" name="title" placeholder="Property Title" value="{{ property.title }}" required>
+
+            <div class="inline-fields">
+                <div class="select-menu">
+                    <div class="select-btn">
+                        <span class="sBtn-text">{{ property.type }}</span>
+                        <img src="{{ url_for('static', filename='images/down-arrow.png') }}" class="icon" alt="Down Arrow">
+                    </div>
+                    <ul class="options">
+                        <li class="option"><span class="option-text">House</span></li>
+                        <li class="option"><span class="option-text">Apartment</span></li>
+                        <li class="option"><span class="option-text">Plot</span></li>
+                        <li class="option"><span class="option-text">Commercial</span></li>
+                    </ul>
+                    <input type="hidden" name="type" value="{{ property.type }}" required>
+                </div>
+
+                <div class="select-menu">
+                    <div class="select-btn">
+                        <span class="sBtn-text">{{ property.purpose }}</span>
+                        <img src="{{ url_for('static', filename='images/down-arrow.png') }}" class="icon" alt="Down Arrow">
+                    </div>
+                    <ul class="options">
+                        <li class="option"><span class="option-text">For Sale</span></li>
+                        <li class="option"><span class="option-text">For Rent</span></li>
+                    </ul>
+                    <input type="hidden" name="purpose" value="{{ property.purpose }}" required>
+                </div>
+            </div>
+
+            <input type="number" step="0.01" name="price" placeholder="Price" value="{{ property.price }}" required>
+
+            <div class="inline-fields">
+                <input type="number" name="area" placeholder="Area / Size" value="{{ property.area }}" required>
+
+                <div class="select-menu">
+                    <div class="select-btn">
+                        <span class="sBtn-text">{{ property.unit }}</span>
+                        <img src="{{ url_for('static', filename='images/down-arrow.png') }}" class="icon" alt="Down Arrow">
+                    </div>
+                    <ul class="options">
+                        <li class="option"><span class="option-text">Marla</span></li>
+                        <li class="option"><span class="option-text">Kanal</span></li>
+                        <li class="option"><span class="option-text">Sq. Ft</span></li>
+                        <li class="option"><span class="option-text">Sq. Yd</span></li>
+                    </ul>
+                    <input type="hidden" name="unit" value="{{ property.unit }}" required>
+                </div>
+            </div>
+
+            <div class="inline-fields">
+                <input type="number" name="bedrooms" placeholder="Bedrooms" min="0" value="{{ property.bedrooms }}" required>
+                <input type="number" name="bathrooms" placeholder="Bathrooms" min="0" value="{{ property.bathrooms }}" required>
+                <input type="number" name="floor" placeholder="Floor (optional)" min="0" value="{{ property.floor or '' }}">
+            </div>
+
+            <div class="select-menu">
+                <div class="select-btn">
+                    <span class="sBtn-text">{{ property.furnished_status }}</span>
+                    <img src="{{ url_for('static', filename='images/down-arrow.png') }}" class="icon" alt="Down Arrow">
+                </div>
+                <ul class="options">
+                    <li class="option"><span class="option-text">Furnished</span></li>
+                    <li class="option"><span class="option-text">Semi-Furnished</span></li>
+                    <li class="option"><span class="option-text">Unfurnished</span></li>
+                </ul>
+                <input type="hidden" name="furnished_status" value="{{ property.furnished_status }}" required>
+            </div>
+
+            <input type="text" name="city" placeholder="City" value="{{ property.city }}" required>
+            <input type="text" name="area_name" placeholder="Area / Neighborhood / Sector" value="{{ property.area_name }}" required>
+            <input type="text" name="address" placeholder="Street Address" value="{{ property.address }}" required>
+            <input type="text" name="landmarks" placeholder="Nearby Landmarks (optional)" value="{{ property.landmarks or '' }}">
+
+            <textarea name="short_description" placeholder="Description" required>{{ property.description }}</textarea>
+
+            <div class="amenities">
+                <p><strong>Select Amenities:</strong></p>
+                {% set amenities_list = property.amenities.split(', ') if property.amenities else [] %}
+                <label><input type="checkbox" name="amenities" value="Parking" {% if 'Parking' in amenities_list %}checked{% endif %}> Parking</label>
+                <label><input type="checkbox" name="amenities" value="Electricity" {% if 'Electricity' in amenities_list %}checked{% endif %}> Electricity</label>
+                <label><input type="checkbox" name="amenities" value="Gas" {% if 'Gas' in amenities_list %}checked{% endif %}> Gas</label>
+                <label><input type="checkbox" name="amenities" value="Water" {% if 'Water' in amenities_list %}checked{% endif %}> Water</label>
+                <label><input type="checkbox" name="amenities" value="Internet" {% if 'Internet' in amenities_list %}checked{% endif %}> Internet</label>
+                <label><input type="checkbox" name="amenities" value="Security" {% if 'Security' in amenities_list %}checked{% endif %}> Security</label>
+                <label><input type="checkbox" name="amenities" value="Balcony" {% if 'Balcony' in amenities_list %}checked{% endif %}> Balcony / Terrace</label>
+                <label><input type="checkbox" name="amenities" value="Lawn" {% if 'Lawn' in amenities_list %}checked{% endif %}> Lawn / Garden</label>
+                <label><input type="checkbox" name="amenities" value="Nearby Schools/Hospitals/Markets" {% if 'Nearby Schools/Hospitals/Markets' in amenities_list %}checked{% endif %}> Nearby Schools / Hospitals / Markets</label>
+            </div>
+
+            <input type="text" name="seller_name" placeholder="Seller Name" value="{{ property.seller_name }}" required>
+            <input type="tel" name="contact_number" placeholder="Contact Number" value="{{ property.contact_number }}" required>
+            <input type="email" name="email" placeholder="Email" value="{{ property.email }}" required>
+
+            <button type="submit">Update Property</button>
+        </form>
+
+        <a href="{{ url_for('dashboard') }}">Back to My Listings</a>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-left">
+                <h2 class="footer-logo"><span class="red">MAN</span>ZIL</h2>
+                <p>Your trusted partner in buying, selling, and renting properties — built with care by Team AEGIS.</p>
+            </div>
+
+            <div class="footer-links">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="{{ url_for('view_properties', purpose='For Sale') }}" class="btn">Buy</a></li>
+                    {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('add_property') }}">Sell</a></li>
+                    {% endif %}
+                    <li><a href="{{ url_for('view_properties', purpose='For Rent') }}" class="btn">Rent</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-contact">
+                <h4>Contact Us</h4>
+                <p>Email: support@manzil.com</p>
+                <p>Phone: +92 300 1234567</p>
+                <p>Location: Islamabad, Pakistan</p>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>© 2025 MANZIL | Designed & Developed by <strong>Team AEGIS</strong></p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/dropdowns.js') }}"></script>
+</body>
+
+</html>

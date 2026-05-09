@@ -1,0 +1,121 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Dashboard - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1>
+        Dashboard
+    </h1>
+
+    <!-- Statistics Cards - All in One Row -->
+    <div class="row-stats">
+        <div class="card stat-card bg-primary">
+            <div class="stat-card-content">
+                <div class="stat-card-text">
+                    <h6>Total Users</h6>
+                    <h3>{{ stats.total_users }}</h3>
+                </div>
+                <img src="{{ url_for('static', filename='images/normaluser.png') }}" alt="Users" class="stat-card-icon">
+            </div>
+        </div>
+
+        <div class="card stat-card bg-success">
+            <div class="stat-card-content">
+                <div class="stat-card-text">
+                    <h6>Total Properties</h6>
+                    <h3>{{ stats.total_properties }}</h3>
+                </div>
+                <img src="{{ url_for('static', filename='images/properties.png') }}" alt="Properties" class="stat-card-icon">
+            </div>
+        </div>
+
+        <div class="card stat-card bg-warning">
+            <div class="stat-card-content">
+                <div class="stat-card-text">
+                    <h6>Suspended Users</h6>
+                    <h3>{{ stats.suspended_users }}</h3>
+                </div>
+                <img src="{{ url_for('static', filename='images/suspendeduser.png') }}" alt="Suspended" class="stat-card-icon">
+            </div>
+        </div>
+
+        <div class="card stat-card bg-danger">
+            <div class="stat-card-content">
+                <div class="stat-card-text">
+                    <h6>Reported</h6>
+                    <h3>{{ stats.unresolved_reports }}</h3>
+                </div>
+                <img src="{{ url_for('static', filename='images/report.png') }}" alt="Reports" class="stat-card-icon">
+            </div>
+        </div>
+    </div>
+
+    <!-- Tables Row -->
+    <div class="row-2">
+        <!-- Recent Users -->
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5>
+                        <img src="{{ url_for('static', filename='images/clock.png') }}" alt="Recent" style="width: 16px; height: 16px;">
+                        Recent Users
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Joined</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in recent_users %}
+                            <tr>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.email }}</td>
+                                <td><small class="text-muted">{{ user.created_at.strftime('%Y-%m-%d') if user.created_at else 'N/A' }}</small></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Properties -->
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5>
+                        <img src="{{ url_for('static', filename='images/clock.png') }}" alt="Recent" style="width: 16px; height: 16px;">
+                        Recent Properties
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>City</th>
+                                <th>Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for property in recent_properties %}
+                            <tr>
+                                <td>{{ property.title[:20] }}...</td>
+                                <td>{{ property.city }}</td>
+                                <td><strong>PKR {{ property.price|int }}</strong></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

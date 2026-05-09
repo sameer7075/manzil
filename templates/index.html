@@ -34,19 +34,23 @@
             <div class="user-actions">
 
                 <div class="icon-wrapper">
-                    <img src="{{ url_for('static', filename='images/inbox.png') }}" alt="Inbox" class="icon">
+                    <a href="{{ url_for('messages_list') }}">
+                        <img src="{{ url_for('static', filename='images/inbox.png') }}" alt="Inbox" class="icon">
+                    </a>
                 </div>
-
 
                 <div class="icon-wrapper">
-                    <img src="{{ url_for('static', filename='images/favourites.png') }}" alt="Favorites" class="icon">
+                   <a href="{{ url_for('favorites_page') }}">
+                        <img src="{{ url_for('static', filename='images/favourites.png') }}" alt="Favorites" class="icon">
+                    </a>
                 </div>
 
-                <div class="icon-wrapper user-icon">
+                <div class="icon-wrapper2 user-icon">
                     <img src="{{ url_for('static', filename='images/user.png') }}" alt="User" class="icon">
                     <div class="user-card">
                         <p><strong>{{ current_user.username }}</strong></p>
                         <p>{{ current_user.email }}</p>
+                        <a href="{{ url_for('dashboard') }}" class="dashboard-link">My Listings</a>
                         <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
                     </div>
                 </div>
