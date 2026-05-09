@@ -1,11 +1,14 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from passlib.hash import pbkdf2_sha256
 import os
 from werkzeug.utils import secure_filename
 from flask import jsonify
 from flask_migrate import Migrate
+import datetime
+from sqlalchemy import and_, or_
+
+from models import db, User, Property, Message, Conversation, PropertyReport
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'my_very_secret_key_12345'
@@ -13,61 +16,10 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 
-db = SQLAlchemy(app)
+db.init_app(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 migrate = Migrate(app, db)
-
-favorites = db.Table('favorites',
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
-    db.Column('property_id', db.Integer, db.ForeignKey('property.id'), primary_key=True)
-)
-
-
-class User(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(20), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(200), nullable=False)  
-
-    favorite_properties = db.relationship('Property', secondary=favorites, backref=db.backref('favorited_by', lazy='dynamic'))
-
-class Property(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-
-    title = db.Column(db.String(100), nullable=False)
-    type = db.Column(db.String(50), nullable=False)
-    purpose = db.Column(db.String(50), nullable=False)
-    price = db.Column(db.Float, nullable=False)
-    area = db.Column(db.Float, nullable=False)
-    unit = db.Column(db.String(20), nullable=False)
-    bedrooms = db.Column(db.Integer, nullable=False)
-    bathrooms = db.Column(db.Integer, nullable=False)
-    floor = db.Column(db.Integer, nullable=True)
-    furnished_status = db.Column(db.String(50), nullable=False)
-
-    city = db.Column(db.String(100), nullable=False)
-    area_name = db.Column(db.String(100), nullable=False)
-    address = db.Column(db.String(200), nullable=False)
-    landmarks = db.Column(db.String(200), nullable=True)
-
-    latitude = db.Column(db.Float, nullable=True)
-    longitude = db.Column(db.Float, nullable=True)
-    
-    description = db.Column(db.Text, nullable=False)
-    
-    images = db.Column(db.String(500), nullable=True)  
-
-    
-    amenities = db.Column(db.String(300), nullable=True)
-    
-    seller_name = db.Column(db.String(100), nullable=False)
-    contact_number = db.Column(db.String(50), nullable=False)
-    email = db.Column(db.String(100), nullable=False)
-    
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    user = db.relationship('User', backref=db.backref('properties', lazy=True))
-
 
 
 @login_manager.user_loader
@@ -136,7 +88,6 @@ def logout():
     logout_user()
     flash('You have been logged out.', 'success')
     return redirect(url_for('index'))
-
 
 @app.route('/add_property', methods=['GET', 'POST'])
 @login_required
@@ -219,16 +170,23 @@ def add_property():
             email=email,
             user_id=current_user.id,
             latitude=latitude,
-            longitude=longitude
+            longitude=longitude,
+            status='pending'
         )
 
         db.session.add(new_property)
         db.session.commit()
 
-        flash('Property added successfully!', 'success')
+        # NEW: Send system notification message to user
+        _create_system_conversation(current_user.id)
+        _send_system_message(current_user.id, 
+                            f"Your listing '{title}' has been submitted and is currently under review by our admin team. You will be notified once it is approved or if any changes are required.")
+
+        flash('Property submitted for review! Please wait for admin approval.', 'success')
         return redirect(url_for('view_properties'))
 
     return render_template('add_property.html')
+
 
 
 @app.route('/properties')
@@ -243,8 +201,7 @@ def view_properties():
     min_price = request.args.get('min_price', type=float)
     max_price = request.args.get('max_price', type=float)
     bedrooms = request.args.get('bedrooms', type=int)
-
-    query = Property.query
+    query = Property.query.filter(Property.status == 'published')
 
     
     if purpose in ['For Sale', 'For Rent']:
@@ -293,6 +250,18 @@ def view_properties():
 @app.route('/property/<int:property_id>')
 def property_detail(property_id):
     property = Property.query.get_or_404(property_id)
+    
+    # Allow viewing if:
+    # 1. Property is published, OR
+    # 2. Current user is the owner, OR
+    # 3. Current user is admin
+    is_owner = current_user.is_authenticated and property.user_id == current_user.id
+    is_admin = current_user.is_authenticated and current_user.role == 'admin'
+    
+    if property.status != 'published' and not is_owner and not is_admin:
+        flash('Property not found or not published yet.', 'danger')
+        return redirect(url_for('view_properties'))
+    
     return render_template('detailed_property.html', property=property)
 
 # ...existing code...
@@ -316,6 +285,7 @@ def delete_property(property_id):
     db.session.commit()
     flash('Property deleted successfully!', 'success')
     return redirect(url_for('dashboard'))
+
 
 @app.route('/edit_property/<int:property_id>', methods=['GET', 'POST'])
 @login_required
@@ -350,11 +320,17 @@ def edit_property(property_id):
         property.contact_number = request.form.get('contact_number')
         property.email = request.form.get('email')
         
+        # Set status back to pending for review
+        property.status = 'pending'
+        property.rejection_reason = None
+        property.updated_at = datetime.datetime.utcnow()
+        
         db.session.commit()
-        flash('Property updated successfully!', 'success')
+        flash('Property updated and submitted for review!', 'success')
         return redirect(url_for('dashboard'))
     
     return render_template('edit_property.html', property=property)
+
 
 @app.route('/favorite/<int:property_id>', methods=['POST'])
 @login_required
@@ -374,6 +350,287 @@ def favorite_property(property_id):
 def favorites_page():
     user_favorites = current_user.favorite_properties  
     return render_template('favorites.html', properties=user_favorites)
+
+
+@app.route('/messages/start/<int:property_id>/<int:seller_id>')
+@login_required
+def start_conversation(property_id, seller_id):
+    property_obj = Property.query.get_or_404(property_id)
+    
+    if seller_id == current_user.id:
+        flash('You cannot message yourself!', 'danger')
+        return redirect(url_for('property_detail', property_id=property_id))
+    
+    conversation = Conversation.query.filter_by(
+        buyer_id=current_user.id,
+        seller_id=seller_id,
+        property_id=property_id
+    ).first()
+    
+    if not conversation:
+        conversation = Conversation(
+            buyer_id=current_user.id,
+            seller_id=seller_id,
+            property_id=property_id
+        )
+        db.session.add(conversation)
+        db.session.commit()
+    
+    return redirect(url_for('messages_thread', conversation_id=conversation.id))
+
+
+@app.route('/messages')
+@login_required
+def messages_list():
+    conversations = Conversation.query.filter(
+        or_(
+            Conversation.buyer_id == current_user.id,
+            Conversation.seller_id == current_user.id
+        )
+    ).order_by(Conversation.updated_at.desc()).all()
+    
+    return render_template('messages.html', conversations=conversations, current_user_id=current_user.id)
+
+
+@app.route('/messages/<int:conversation_id>')
+@login_required
+def messages_thread(conversation_id):
+    conversation = Conversation.query.get_or_404(conversation_id)
+    
+    if conversation.buyer_id != current_user.id and conversation.seller_id != current_user.id:
+        flash('You do not have permission to view this conversation.', 'danger')
+        return redirect(url_for('messages_list'))
+    
+    messages = Message.query.filter_by(conversation_id=conversation_id).order_by(Message.created_at.asc()).all()
+    
+    for message in messages:
+        if message.sender_id != current_user.id and not message.is_read:
+            message.is_read = True
+    
+    db.session.commit()
+    
+    other_user_id = conversation.seller_id if conversation.buyer_id == current_user.id else conversation.buyer_id
+    other_user = User.query.get(other_user_id)
+    
+    # NEW: Check if this is a system conversation
+    is_system_conversation = conversation.is_system_conversation
+    
+    return render_template('messages_thread.html', 
+                         conversation=conversation, 
+                         messages=messages,
+                         other_user=other_user,
+                         current_user_id=current_user.id,
+                         is_system_conversation=is_system_conversation)  # NEW
+
+
+
+@app.route('/messages/api/<int:conversation_id>')
+@login_required
+def get_messages_api(conversation_id):
+    conversation = Conversation.query.get_or_404(conversation_id)
+    
+    if conversation.buyer_id != current_user.id and conversation.seller_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    messages = Message.query.filter_by(conversation_id=conversation_id).order_by(Message.created_at.asc()).all()
+    
+    for message in messages:
+        if message.sender_id != current_user.id and not message.is_read:
+            message.is_read = True
+    
+    db.session.commit()
+    
+    messages_data = []
+    for msg in messages:
+        messages_data.append({
+            'id': msg.id,
+            'sender_id': msg.sender_id,
+            'sender_name': msg.sender.username,
+            'content': msg.content,
+            'attachment': msg.attachment,
+            'is_deleted': msg.is_deleted,
+            'created_at': msg.created_at.strftime('%H:%M'),
+            'edited_at': msg.edited_at.strftime('%H:%M') if msg.edited_at else None,
+            'is_read': msg.is_read
+        })
+    
+    return jsonify({'messages': messages_data})
+
+
+@app.route('/messages/send', methods=['POST'])
+@login_required
+def send_message():
+    conversation_id = request.form.get('conversation_id', type=int)
+    content = request.form.get('content', '').strip()
+    
+    conversation = Conversation.query.get_or_404(conversation_id)
+    
+    if conversation.buyer_id != current_user.id and conversation.seller_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    # NEW: Prevent replies to system conversations
+    if conversation.is_system_conversation:
+        return jsonify({'error': 'Cannot reply to system notifications'}), 403
+    
+    if not content and 'file' not in request.files:
+        return jsonify({'error': 'Message cannot be empty'}), 400
+    
+    if len(content) > 1000:
+        return jsonify({'error': 'Message exceeds 1000 character limit'}), 400
+    
+    attachment_filename = None
+    
+    if 'file' in request.files:
+        file = request.files['file']
+        if file and file.filename:
+            if file.content_length > 5 * 1024 * 1024:
+                return jsonify({'error': 'File size exceeds 5MB limit'}), 400
+            
+            ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'doc', 'docx'}
+            if '.' not in file.filename or file.filename.rsplit('.', 1)[1].lower() not in ALLOWED_EXTENSIONS:
+                return jsonify({'error': 'File type not allowed'}), 400
+            
+            messages_upload_folder = os.path.join(app.config['UPLOAD_FOLDER'], 'messages')
+            os.makedirs(messages_upload_folder, exist_ok=True)
+            
+            filename = secure_filename(file.filename)
+            filename = f"{datetime.datetime.now().timestamp()}_{filename}"
+            file.save(os.path.join(messages_upload_folder, filename))
+            attachment_filename = filename
+    
+    message = Message(
+        conversation_id=conversation_id,
+        sender_id=current_user.id,
+        content=content if content else None,
+        attachment=attachment_filename
+    )
+    
+    conversation.updated_at = datetime.datetime.utcnow()
+    db.session.add(message)
+    db.session.commit()
+    
+    return jsonify({
+        'id': message.id,
+        'sender_id': message.sender_id,
+        'sender_name': current_user.username,
+        'content': message.content,
+        'attachment': message.attachment,
+        'is_deleted': False,
+        'created_at': message.created_at.strftime('%H:%M'),
+        'edited_at': None
+    }), 201
+
+
+@app.route('/messages/<int:message_id>/edit', methods=['POST'])
+@login_required
+def edit_message(message_id):
+    message = Message.query.get_or_404(message_id)
+    
+    if message.sender_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    if message.is_deleted:
+        return jsonify({'error': 'Cannot edit deleted message'}), 400
+    
+    content = request.form.get('content', '').strip()
+    
+    if not content:
+        return jsonify({'error': 'Message cannot be empty'}), 400
+    
+    if len(content) > 1000:
+        return jsonify({'error': 'Message exceeds 1000 character limit'}), 400
+    
+    message.content = content
+    message.edited_at = datetime.datetime.utcnow()
+    db.session.commit()
+    
+    return jsonify({
+        'id': message.id,
+        'content': message.content,
+        'edited_at': message.edited_at.strftime('%H:%M')
+    })
+
+
+@app.route('/messages/<int:message_id>/delete', methods=['POST'])
+@login_required
+def delete_message(message_id):
+    message = Message.query.get_or_404(message_id)
+    
+    if message.sender_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    message.is_deleted = True
+    message.content = None
+    db.session.commit()
+    
+    return jsonify({'success': True, 'id': message.id})
+
+
+@app.route('/messages/unread-count')
+@login_required
+def unread_message_count():
+    unread_count = Message.query.join(Conversation).filter(
+        and_(
+            Message.is_read == False,
+            or_(
+                Conversation.buyer_id == current_user.id,
+                Conversation.seller_id == current_user.id
+            ),
+            Message.sender_id != current_user.id
+        )
+    ).count()
+    
+    return jsonify({'unread_count': unread_count})
+
+
+def _create_system_conversation(user_id):
+    """Create or get system conversation for user"""
+    system_user = User.query.filter_by(username='system').first()
+    if not system_user:
+        return None
+    
+    conversation = Conversation.query.filter_by(
+        buyer_id=user_id,
+        seller_id=system_user.id,
+        property_id=None,
+        is_system_conversation=True
+    ).first()
+    
+    if not conversation:
+        conversation = Conversation(
+            buyer_id=user_id,
+            seller_id=system_user.id,
+            property_id=None,
+            is_system_conversation=True
+        )
+        db.session.add(conversation)
+        db.session.commit()
+    
+    return conversation
+
+
+def _send_system_message(user_id, message_content):
+    """Send system message to user"""
+    conversation = _create_system_conversation(user_id)
+    if conversation:
+        system_user = User.query.filter_by(username='system').first()
+        message = Message(
+            conversation_id=conversation.id,
+            sender_id=system_user.id,
+            content=message_content,
+            is_system_message=True
+        )
+        db.session.add(message)
+        db.session.commit()
+
+
+
+
+
+
+
+from admin import admin_bp
+app.register_blueprint(admin_bp)
 
 
 if __name__ == '__main__':

@@ -40,7 +40,9 @@
             {% if current_user.is_authenticated %}
             <div class="user-actions">
                 <div class="icon-wrapper">
-                    <img src="{{ url_for('static', filename='images/inbox.png') }}" alt="Inbox" class="icon">
+                    <a href="{{ url_for('messages_list') }}">
+                        <img src="{{ url_for('static', filename='images/inbox.png') }}" alt="Inbox" class="icon">
+                    </a>
                 </div>
                 <div class="icon-wrapper">
                     <a href="{{ url_for('favorites_page') }}">
@@ -157,7 +159,11 @@
 
                     <div class="seller-actions">
                         <a href="mailto:{{ property.email }}" class="btn-email">Email Seller</a>
-                        <a href="javascript:void(0);" class="btn-chat">Chat with Seller</a>
+                        {% if current_user.is_authenticated %}
+                            <a href="{{ url_for('start_conversation', property_id=property.id, seller_id=property.user_id) }}" class="btn-chat">Chat with Seller</a>
+                        {% else %}
+                            <a href="{{ url_for('login', next=url_for('property_detail', property_id=property.id)) }}" class="btn-chat">Chat with Seller</a>
+                        {% endif %}
                     </div>
                 </div>
             </div>

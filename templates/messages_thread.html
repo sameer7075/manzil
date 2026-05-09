@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat - MANZIL</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/messaging.css') }}">
+    <style>
+        header.navbar {
+            background: linear-gradient(to right, #ffffff, #f9f9f9);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <a href="{{ url_for('index') }}" class="logo">
+            <div class="Heading">
+                <span class="red">MAN</span><span>ZIL</span>
+            </div>
+        </a>
+
+        <div class="nav-buttons">
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('view_properties', purpose='For Sale') }}" class="btn">Buy</a></li>
+                    {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('add_property') }}">Sell</a></li>
+                    {% endif %}
+                    <li><a href="{{ url_for('view_properties', purpose='For Rent') }}" class="btn">Rent</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <div class="auth-buttons">
+            {% if current_user.is_authenticated %}
+            <div class="user-actions">
+                <div class="icon-wrapper">
+                    <a href="{{ url_for('messages_list') }}">
+                        <img src="{{ url_for('static', filename='images/inbox.png') }}" alt="Messages" class="icon">
+                    </a>
+                </div>
+                <div class="icon-wrapper">
+                    <a href="{{ url_for('favorites_page') }}">
+                        <img src="{{ url_for('static', filename='images/favourites.png') }}" alt="Favorites" class="icon">
+                    </a>
+                </div>
+                <div class="icon-wrapper2 user-icon">
+                    <img src="{{ url_for('static', filename='images/user.png') }}" alt="User" class="icon">
+                    <div class="user-card">
+                        <p><strong>{{ current_user.username }}</strong></p>
+                        <p>{{ current_user.email }}</p>
+                        <a href="{{ url_for('dashboard') }}" class="dashboard-link">My Listings</a>
+                        <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <a href="{{ url_for('login') }}" class="login">Log In</a>
+            <a href="{{ url_for('register') }}" class="signup">Sign Up</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <div class="messages-container">
+        <div class="conversations-sidebar">
+            <h2 class="sidebar-title">Chats</h2>
+            <div class="conversations-list" id="conversations-list">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <div class="chat-panel">
+            <div class="chat-header">
+                <div>
+                    <h2 class="chat-username">
+                        {% if conversation.is_system_conversation %}
+                            📢 System Notifications
+                        {% else %}
+                            {{ other_user.username }}
+                        {% endif %}
+                    </h2>
+                    <p class="chat-property">
+                        {% if conversation.is_system_conversation %}
+                            System Updates
+                        {% else %}
+                            {{ conversation.property.title if conversation.property else 'No property' }}
+                        {% endif %}
+                    </p>
+                </div>
+                <a href="{{ url_for('messages_list') }}" class="back-btn">← Back</a>
+            </div>
+
+            <!-- NEW: System notification banner -->
+            {% if conversation.is_system_conversation %}
+            <div class="alert alert-info system-notification-banner" role="alert">
+                <strong>📢 System Notifications</strong>
+                <p>This is a read-only conversation with system updates about your listings. You cannot reply here.</p>
+            </div>
+            {% endif %}
+
+            <div class="messages-thread" id="messages-thread">
+                {% for message in messages %}
+                    {% set msg_id = message.id %}
+                    <div class="message-group" data-message-id="{{ msg_id }}">
+                        {% if message.sender_id == current_user_id %}
+                            {% if message.is_deleted %}
+                                <div class="message sender deleted-message">
+                                    <span class="message-text">[Message deleted]</span>
+                                </div>
+                            {% else %}
+                                <div class="message sender" data-msg-id="{{ msg_id }}">
+                                    <div class="message-content">
+                                        <p class="message-text">{{ message.content }}</p>
+                                        {% if message.attachment %}
+                                            <div class="message-attachment">
+                                                <a href="{{ url_for('static', filename='uploads/messages/' + message.attachment) }}" download>
+                                                    📎 {{ message.attachment.split('_', 1)[1] }}
+                                                </a>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="message-actions">
+                                        <button class="msg-btn edit-btn" data-msg-id="{{ msg_id }}">Edit</button>
+                                        <button class="msg-btn delete-btn" data-msg-id="{{ msg_id }}">Delete</button>
+                                    </div>
+                                    <div class="message-meta">
+                                        <span class="message-time">{{ message.created_at.strftime('%H:%M') }}</span>
+                                        {% if message.edited_at %}
+                                            <span class="edited-label">edited</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="edit-form" id="edit-form-{{ msg_id }}" style="display: none;">
+                                    <textarea class="edit-textarea" maxlength="1000" id="edit-text-{{ msg_id }}">{{ message.content }}</textarea>
+                                    <div class="edit-actions">
+                                        <button class="edit-save" type="button" data-msg-id="{{ msg_id }}">Save</button>
+                                        <button class="edit-cancel" type="button" data-msg-id="{{ msg_id }}">Cancel</button>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            {% if message.is_deleted %}
+                                <div class="message receiver deleted-message">
+                                    <span class="message-text">[Message deleted]</span>
+                                </div>
+                            {% else %}
+                                <div class="message receiver">
+                                    <div class="message-content">
+                                        <p class="message-text">{{ message.content }}</p>
+                                        {% if message.attachment %}
+                                            <div class="message-attachment">
+                                                <a href="{{ url_for('static', filename='uploads/messages/' + message.attachment) }}" download>
+                                                    📎 {{ message.attachment.split('_', 1)[1] }}
+                                                </a>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="message-meta">
+                                        <span class="message-time">{{ message.created_at.strftime('%H:%M') }}</span>
+                                        {% if message.edited_at %}
+                                            <span class="edited-label">edited</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- NEW: Conditional message input area -->
+            <div class="message-input-area">
+                {% if not conversation.is_system_conversation %}
+                <!-- Normal message form for regular conversations -->
+                <form id="message-form" class="message-form">
+                    <input type="hidden" id="conversation-id" value="{{ conversation.id }}">
+                    <input type="hidden" id="current-user-id" value="{{ current_user_id }}">
+                    
+                    <div class="input-wrapper">
+                        <textarea id="message-input" class="message-input" placeholder="Type your message..." maxlength="1000"></textarea>
+                        <label for="file-input" class="file-label">📎</label>
+                        <input type="file" id="file-input" class="file-input" accept=".txt,.pdf,.png,.jpg,.jpeg,.gif,.doc,.docx">
+                        <button type="submit" class="send-btn">Send</button>
+                    </div>
+                    
+                    <div id="file-preview" class="file-preview"></div>
+                </form>
+                {% else %}
+                <!-- Disabled message input for system conversations -->
+                <div class="message-input-disabled">
+                    <textarea disabled placeholder="System notifications are read-only" class="message-input"></textarea>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-left">
+                <h2 class="footer-logo"><span class="red">MAN</span>ZIL</h2>
+                <p>Your trusted partner in buying, selling, and renting properties — built with care by Team AEGIS.</p>
+            </div>
+
+            <div class="footer-links">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="{{ url_for('view_properties', purpose='For Sale') }}" class="btn">Buy</a></li>
+                    {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('add_property') }}">Sell</a></li>
+                    {% endif %}
+                    <li><a href="{{ url_for('view_properties', purpose='For Rent') }}" class="btn">Rent</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-contact">
+                <h4>Contact Us</h4>
+                <p>Email: support@manzil.com</p>
+                <p>Phone: +92 300 1234567</p>
+                <p>Location: Islamabad, Pakistan</p>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>© 2025 MANZIL | Designed & Developed by <strong>Team AEGIS</strong></p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/dropdowns.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/messaging.js') }}"></script>
+
+    <script>
+        const convId = parseInt(document.getElementById('conversation-id')?.value || 0);
+        const curUserId = parseInt(document.getElementById('current-user-id')?.value || 0);
+    </script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Messages - MANZIL</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/messaging.css') }}">
+    <style>
+        header.navbar {
+            background: linear-gradient(to right, #ffffff, #f9f9f9);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <a href="{{ url_for('index') }}" class="logo">
+            <div class="Heading">
+                <span class="red">MAN</span><span>ZIL</span>
+            </div>
+        </a>
+
+        <div class="nav-buttons">
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('view_properties', purpose='For Sale') }}" class="btn">Buy</a></li>
+                    {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('add_property') }}">Sell</a></li>
+                    {% endif %}
+                    <li><a href="{{ url_for('view_properties', purpose='For Rent') }}" class="btn">Rent</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <div class="auth-buttons">
+            {% if current_user.is_authenticated %}
+            <div class="user-actions">
+                <div class="icon-wrapper">
+                    <a href="{{ url_for('messages_list') }}">
+                        <img src="{{ url_for('static', filename='images/inbox.png') }}" alt="Messages" class="icon">
+                        <span class="unread-badge" id="unread-badge" style="display: none;">0</span>
+                    </a>
+                </div>
+                <div class="icon-wrapper">
+                    <a href="{{ url_for('favorites_page') }}">
+                        <img src="{{ url_for('static', filename='images/favourites.png') }}" alt="Favorites" class="icon">
+                    </a>
+                </div>
+                <div class="icon-wrapper2 user-icon">
+                    <img src="{{ url_for('static', filename='images/user.png') }}" alt="User" class="icon">
+                    <div class="user-card">
+                        <p><strong>{{ current_user.username }}</strong></p>
+                        <p>{{ current_user.email }}</p>
+                        <a href="{{ url_for('dashboard') }}" class="dashboard-link">My Listings</a>
+                        <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <a href="{{ url_for('login') }}" class="login">Log In</a>
+            <a href="{{ url_for('register') }}" class="signup">Sign Up</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <div class="messages-container">
+        <div class="conversations-sidebar">
+            <h2 class="sidebar-title">Chats</h2>
+            <div class="conversations-list">
+                {% if conversations %}
+                    {% for conv in conversations %}
+                    {% set other_user = conv.seller if conv.buyer_id == current_user_id else conv.buyer %}
+                    {% set last_message = conv.messages[-1] if conv.messages else None %}
+                    {% set unread = conv.messages|selectattr('sender_id', 'ne', current_user_id)|selectattr('is_read', 'equalto', False)|list %}
+                    
+                    <a href="{{ url_for('messages_thread', conversation_id=conv.id) }}" class="conversation-item {% if conv.is_system_conversation %}system-conversation{% endif %}">
+                        <div class="conversation-header">
+                            <h4 class="conversation-user">
+                                {% if conv.is_system_conversation %}
+                                    📢 System Notifications
+                                {% else %}
+                                    {{ other_user.username }}
+                                {% endif %}
+                            </h4>
+                            <p class="conversation-time">
+                                {% if last_message %}
+                                    {{ last_message.created_at.strftime('%H:%M') }}
+                                {% endif %}
+                            </p>
+                            {% if unread %}
+                            <span class="badge">{{ unread|length }}</span>
+                            {% endif %}
+                        </div>
+                        <p class="conversation-property">
+                            {% if conv.is_system_conversation %}
+                                System Updates
+                            {% else %}
+                                {{ conv.property.title if conv.property else 'No property' }}
+                            {% endif %}
+                        </p>
+                        <p class="conversation-preview">
+                            {% if last_message %}
+                                {% if last_message.is_deleted %}
+                                    <em>[Message deleted]</em>
+                                {% elif last_message.content %}
+                                    {{ last_message.content[:50] }}{% if last_message.content|length > 50 %}...{% endif %}
+                                {% elif last_message.attachment %}
+                                    📎 Attachment
+                                {% endif %}
+                            {% else %}
+                                No messages yet
+                            {% endif %}
+                        </p>
+                    </a>
+                    {% endfor %}
+                {% else %}
+                    <p class="no-conversations">No conversations yet</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="messages-empty-state">
+            <div class="empty-content">
+                <img src="{{ url_for('static', filename='images/inbox.png') }}" alt="Empty" class="empty-icon">
+                <h3>No Conversation Selected</h3>
+                <p>Select a conversation from the left panel to start messaging</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-left">
+                <h2 class="footer-logo"><span class="red">MAN</span>ZIL</h2>
+                <p>Your trusted partner in buying, selling, and renting properties — built with care by Team AEGIS.</p>
+            </div>
+
+            <div class="footer-links">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="{{ url_for('view_properties', purpose='For Sale') }}" class="btn">Buy</a></li>
+                    {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('add_property') }}">Sell</a></li>
+                    {% endif %}
+                    <li><a href="{{ url_for('view_properties', purpose='For Rent') }}" class="btn">Rent</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-contact">
+                <h4>Contact Us</h4>
+                <p>Email: support@manzil.com</p>
+                <p>Phone: +92 300 1234567</p>
+                <p>Location: Islamabad, Pakistan</p>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>© 2025 MANZIL | Designed & Developed by <strong>Team AEGIS</strong></p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/dropdowns.js') }}"></script>
+    <script>
+        function updateUnreadCount() {
+            fetch('{{ url_for("unread_message_count") }}')
+                .then(res => res.json())
+                .then(data => {
+                    const badge = document.getElementById('unread-badge');
+                    if (data.unread_count > 0) {
+                        badge.textContent = data.unread_count;
+                        badge.style.display = 'inline-block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                });
+        }
+
+        updateUnreadCount();
+        setInterval(updateUnreadCount, 5000);
+    </script>
+</body>
+</html>

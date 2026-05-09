@@ -1,0 +1,113 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Reported Listings - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1>
+        Reported Listings
+    </h1>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="btn-group gap-2">
+                <a href="{{ url_for('admin.reports', status='unresolved') }}" class="btn btn-outline-danger {% if status == 'unresolved' %}active{% endif %}">Unresolved</a>
+                <a href="{{ url_for('admin.reports', status='resolved') }}" class="btn btn-outline-success {% if status == 'resolved' %}active{% endif %}">Resolved</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5>Reports ({{ reports.total }})</h5>
+        </div>
+        <div class="card-body p-0">
+            {% if reports.items %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Property</th>
+                        <th>Reason</th>
+                        <th>Reported By</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in reports.items %}
+                    <tr>
+                        <td>{{ report.id }}</td>
+                        <td>
+                            <a href="{{ url_for('property_detail', property_id=report.property_id) }}" target="_blank">
+                                {{ report.property.title[:30] }}...
+                            </a>
+                        </td>
+                        <td>{{ report.reason }}</td>
+                        <td>{{ report.reported_by.username }}</td>
+                        <td><small>{{ report.created_at.strftime('%Y-%m-%d %H:%M') }}</small></td>
+                        <td>
+                            {% if report.is_resolved %}
+                                <span class="badge bg-success">Resolved</span>
+                            {% else %}
+                                <span class="badge bg-danger">Unresolved</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                {% if not report.is_resolved %}
+                                <form method="POST" action="{{ url_for('admin.resolve_report', report_id=report.id) }}" style="display: inline;">
+                                    <button type="submit" class="btn btn-success">
+                                        <img src="{{ url_for('static', filename='images/check.png') }}" alt="Check" style="width: 14px; height: 14px;">
+                                        Resolve
+                                    </button>
+                                </form>
+                                {% endif %}
+                                
+                                <form method="POST" action="{{ url_for('admin.delete_report', report_id=report.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure?');">
+                                    <button type="submit" class="btn btn-danger">
+                                        <img src="{{ url_for('static', filename='images/trash.png') }}" alt="Delete" style="width: 14px; height: 14px;">
+                                        Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="alert alert-info">No reports found.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <nav class="mt-4">
+        <ul class="pagination">
+            {% if reports.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.reports', page=reports.prev_num, status=status) }}">Previous</a>
+            </li>
+            {% endif %}
+
+            {% for page_num in reports.iter_pages() %}
+                {% if page_num %}
+                    {% if page_num == reports.page %}
+                    <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
+                    {% else %}
+                    <li class="page-item"><a class="page-link" href="{{ url_for('admin.reports', page=page_num, status=status) }}">{{ page_num }}</a></li>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+
+            {% if reports.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.reports', page=reports.next_num, status=status) }}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endblock %}

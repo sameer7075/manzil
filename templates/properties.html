@@ -33,7 +33,9 @@
             {% if current_user.is_authenticated %}
             <div class="user-actions">
                 <div class="icon-wrapper">
-                    <img src="{{ url_for('static', filename='images/inbox.png') }}" alt="Inbox" class="icon">
+                    <a href="{{ url_for('messages_list') }}">
+                        <img src="{{ url_for('static', filename='images/inbox.png') }}" alt="Inbox" class="icon">
+                    </a>
                 </div>
                 <div class="icon-wrapper">
                     <a href="{{ url_for('favorites_page') }}">
